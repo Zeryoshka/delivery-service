@@ -18,6 +18,11 @@ Testing with pytest
 pytest
 ```
 
+To calculate coverage
+```bash
+pytest --cov=app
+```
+
 
 
 ## Using
