@@ -8,7 +8,9 @@ NAMES_OF_VARS = [
     'DB_HOST',
     'DB_USER',
     'DB_PASSWORD',
-    'DB_NAME'
+    'DB_NAME',
+    'LOG_FILE',
+    'LOG_LEVEL'
 ]
 
 
