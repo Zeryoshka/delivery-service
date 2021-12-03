@@ -5,5 +5,5 @@ from app.config import Config
 
 def main():
     config = Config()
-    app = create_app()
+    app = create_app(config)
     web.run_app(app, host='0.0.0.0', port=config.PORT)
