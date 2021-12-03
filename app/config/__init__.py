@@ -12,7 +12,6 @@ NAMES_OF_VARS = [
 ]
 
 
-
 class Config:
     def _get_env_vars(self) -> None:
         for var_name in NAMES_OF_VARS:

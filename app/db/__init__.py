@@ -23,5 +23,4 @@ class DB:
                     select(text('1'))
                 )
         except Exception as err:
-            print(type(err), err)
             raise web.HTTPInternalServerError(body=err)
