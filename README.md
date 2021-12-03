@@ -48,6 +48,10 @@ If you use CLI for configuring after environment variables system will use CLI
 ### Variables and default values
 ```
 PORT = 8080
+
+LOG_FILE = None
+LOG_LEVEL = INFO
+
 DB_PORT = 5432
 DB_HOST = localhost
 DB_USER = postgres
@@ -61,3 +65,7 @@ Example CLI flags for configuring
 ```bash
 delivery-api --PORT 5000 --DB_PORT 5433
 ```
+
+## Logging
+We create logging to delivery-service. By default service writes logs to stdout, but if you set LOG_FILE variable, you can write logs to files.
+If you want to decrease verbosity, you can set LOG_LEVEL variable to WARN or ERROR (By default LOG_LEVEL=INFO).
