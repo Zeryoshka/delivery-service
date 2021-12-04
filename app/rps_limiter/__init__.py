@@ -4,6 +4,8 @@ from asyncio import Lock
 
 class RPS_limiter:
     def __init__(self, max_rps: int):
+        if max_rps == 0:
+            self.is_limit = self.is_non_limit
         self.max_rps = max_rps
         self.lock = Lock()
         self.req_times_by_url = defaultdict(deque)
@@ -20,3 +22,6 @@ class RPS_limiter:
             self.req_times_by_url[rel_url].pop()
             self.req_times_by_url[rel_url].appendleft(req_time)
             return False
+
+    async def is_non_limit(self, _: str) -> bool:
+        return False
