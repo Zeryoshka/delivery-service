@@ -10,7 +10,8 @@ NAMES_OF_VARS = [
     'DB_PASSWORD',
     'DB_NAME',
     'LOG_FILE',
-    'LOG_LEVEL'
+    'LOG_LEVEL',
+    'MAX_RPS'
 ]
 
 

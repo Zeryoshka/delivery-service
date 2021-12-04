@@ -12,7 +12,7 @@ async def exception_middleware(request: web.Request, handler: Callable) -> web.R
         return await handler(request)
     except web.HTTPError as err:
         logger.info(f'Caught exception (status {err.status_code})')
-        return web.json_response(status=HTTPStatus.INTERNAL_SERVER_ERROR)
+        return web.json_response(status=err.status_code)
     except Exception as err:
         logger.error(f'Uncaught exception (status 500): {err}')
         return web.json_response(status=HTTPStatus.INTERNAL_SERVER_ERROR)

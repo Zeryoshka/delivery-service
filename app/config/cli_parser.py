@@ -13,5 +13,7 @@ api_parser.add_argument('--DB_NAME', dest='DB_NAME', type=str, nargs=1, default=
 
 api_parser.add_argument('--PORT', dest='PORT', type=int, nargs=1, default=None)
 
+api_parser.add_argument('--MAX_RPS', dest='MAX_RPS', type=int, nargs=1, default=None)
+
 api_parser.add_argument('--LOG_FILE', dest='LOG_FILE', type=str, nargs=1, default=None)
 api_parser.add_argument('--LOG_LEVEL', dest='LOG_LEVEL', type=str, nargs=1, default=None)
