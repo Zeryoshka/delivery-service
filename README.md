@@ -49,7 +49,7 @@ If you use CLI for configuring after environment variables system will use CLI
 ```
 PORT = 8080
 
-MAX_RPS = 5
+MAX_RPS = 0
 
 LOG_FILE = None
 LOG_LEVEL = INFO
@@ -73,4 +73,4 @@ We create logging to delivery-service. By default service writes logs to stdout,
 If you want to decrease verbosity, you can set LOG_LEVEL variable to WARN or ERROR (By default LOG_LEVEL=INFO).
 
 ## limiting RPS
-System can limit RPS. If you set limit rps, users will not use rout more then `MAX_RPS` per second (for all routes). System limiting rps thread-safe, based on `asyncio.lock`.
+System can limit RPS. If MAX_RPS==0 then system set non limit rps. If you set limit rps, users will not use rout more then `MAX_RPS` per second (for all routes). System limiting rps thread-safe, based on `asyncio.lock`.
