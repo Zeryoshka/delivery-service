@@ -2,8 +2,6 @@ from uuid import uuid4
 from sqlalchemy.dialects.postgresql import UUID, ENUM
 from sqlalchemy import Table, Column, Integer, String, MetaData
 from sqlalchemy.sql.schema import ForeignKey
-from sqlalchemy.ext.asyncio import create_async_engine
-import asyncio
 
 meta = MetaData()
 states = ENUM(
