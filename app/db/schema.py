@@ -2,6 +2,8 @@ from uuid import uuid4
 from sqlalchemy.dialects.postgresql import UUID, ENUM
 from sqlalchemy import Table, Column, Integer, String, MetaData
 from sqlalchemy.sql.schema import ForeignKey
+from sqlalchemy.ext.asyncio import create_async_engine
+import asyncio
 
 meta = MetaData()
 states = ENUM(
@@ -26,7 +28,7 @@ orders = Table(
     Column(name='content', type_=String(60), nullable=False),
     Column(name='comment', type_=String(60), nullable=False),
     Column(name='state', type_=states, nullable=False),
-    Column(name='restaurant_id', type_=Integer, foreign_key=ForeignKey('Restaurants.id'))
+    Column(name='restaurant_id', type_=Integer, foreign_key=ForeignKey('Restaurants.id'), nullable=False)
 )
 
 dishes = Table(
@@ -40,6 +42,7 @@ dishes = Table(
 orders_to_dishes = Table(
     'OrdersToDishes', meta,
     Column(name='id', type_=Integer, primary_key=True),
+    Column(name='amount', type_=Integer, default=1, nullable=False),
     Column(name='dish_id', type_=Integer, foreign_key=ForeignKey('Dishes.id')),
     Column(name='order_id', type_=Integer, foreign_key=ForeignKey('Orders.id'))
 )
