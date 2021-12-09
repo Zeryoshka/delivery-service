@@ -2,13 +2,18 @@ openapi: '3.0.2'
 info:
   title: 'Delivery-service'
   description: 'Delivery-service API description'
-  version: '0.0'
+  version: '0.1'
 components:
   schemas:
     Order:
       type: object
       properties:
-        x_d:
+        dishes:
+          type: array
+          items:
+            type: string
+            format: uuid
+        comment:
           type: string
 
     OrderCreated:
@@ -24,6 +29,17 @@ components:
           type: string
         end:
           type: string
+
+    Dish:
+      type: object
+      properties:
+        uuid:
+          type: string
+          format: uuid
+        name:
+          type: string
+        price:
+          type: number
 
 paths:
   /ping:
@@ -79,7 +95,7 @@ paths:
     get:
       tags:
         - Orders
-      summary: delete orders
+      summary: get detailed order info
       parameters:
         - name: order_id
           in: path
@@ -166,5 +182,51 @@ paths:
           description: Too many requests
         '406':
           description: Not acceptable content
+        '500':
+          description: Internal server error
+
+  /api/v1/dishes:
+    get:
+      tags:
+        - Dishes
+      summary: get dishes list
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Dish'
+        '400':
+          description: Bad parameters
+        '429':
+          description: Too many requests
+        '500':
+          description: Internal server error
+
+  /api/v1/dishes/{dish_id}:
+    get:
+      tags:
+        - Dishes
+      summary: get detailed dish info
+      parameters:
+        - name: dish_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dish'
+        '404':
+          description: Not found
+        '429':
+          description: Too many requests
         '500':
           description: Internal server error
