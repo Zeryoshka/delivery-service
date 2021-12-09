@@ -3,7 +3,7 @@
 ## Installing
 Install package with dev dependencies
 ```bash
-pip insall -e .[dev]
+pip install -e .[dev]
 ```
 
 Install package without dev dependencies
