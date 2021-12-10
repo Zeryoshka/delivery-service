@@ -1,5 +1,4 @@
 # Delivery-service
-
 ## Installing
 Install package with dev dependencies
 ```bash
@@ -66,6 +65,28 @@ DB_NAME = db
 Example CLI flags for configuring
 ```bash
 delivery-api --PORT 5000 --DB_PORT 5433
+```
+
+## Migrations
+This service use alembic for working with migrations. Alembic - universal util for migrations connecting to sqlalchemy.
+You can use `delivery-db` instead base alembic's util, with special CLI parameters to configure postgres connection (or os environments).
+Default values match with default service values.
+```bash
+--db-host BD_HOST
+--db-port DB_PORT
+--db-password DB_PASSWORD
+--db-user DB_USER
+--db-name DB_NAME
+```
+
+### Simple usage
+To revise new migration you need to start db with last revision and command
+```bash
+delivery-db revision --message="message" --autogenerate
+```
+To upgrade db to cur revision you need to use next command
+```bash
+delivery-db upgrade HEAD
 ```
 
 ## Logging
