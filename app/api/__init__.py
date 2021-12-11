@@ -15,7 +15,10 @@ def create_startup_function(config: Config) -> Callable:
     async def on_start(app: web.Application) -> None:
         app['db'] = DB(config)
         app['rps_limiter'] = RPS_limiter(config.MAX_RPS)
-        app['geo_service'] = GeoService(config.API_KEY, config.MIN_COST, config.MONEY_FOR_METER)
+        app['geo_service'] = GeoService(
+            config.API_KEY, config.MIN_COST,
+            config.MONEY_FOR_METER, config.GEO_API_MODE
+        )
         app['config'] = config
         logger.info('App started')
 

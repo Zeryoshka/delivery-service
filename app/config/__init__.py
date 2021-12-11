@@ -15,6 +15,7 @@ NAMES_OF_VARS = [
     'API_KEY',
     'MIN_COST',
     'MONEY_FOR_METER',
+    'GEO_API_MODE'
 ]
 
 

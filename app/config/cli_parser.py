@@ -21,3 +21,4 @@ api_parser.add_argument('--LOG_LEVEL', dest='LOG_LEVEL', type=str, nargs=1, defa
 api_parser.add_argument('--API_KEY', dest='API_KEY', type=str, nargs=1, default=None)
 api_parser.add_argument('--MIN_COST', dest='MIN_COST', type=int, nargs=1, default=None)
 api_parser.add_argument('--MONEY_FOR_METER', dest='MONEY_FOR_METER', type=int, nargs=1, default=None)
+api_parser.add_argument('--GEO_API_MODE', dest='GEO_API_MODE', type=str, nargs=1, default=None)

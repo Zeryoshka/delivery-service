@@ -1,17 +1,25 @@
+from enum import Enum
 from http import HTTPStatus
 from aiohttp import ClientSession
 
-from app.config import Config
 from app.geo_service.exceptions import GeoApiError, RouteNotFound
+
+
+class GeoApiMode(Enum):
+    EXTERNAL_API = 'EXTERNAL_API'
+    IN_PLACE_COUNTER = 'IN_PLACE_COUNTER'
+
 
 URL_ROUTES = 'http://www.mapquestapi.com/directions/v2/routematrix'
 class GeoService:
 
-    def __init__(self, api_key: str, min_cost: int, money_for_meter: int) -> None:
+    def __init__(self, api_key: str, min_cost: int, money_for_meter: int, mode: str) -> None:
         self.min_cost = min_cost
         self.money_for_meter = money_for_meter
         self.session = ClientSession()
         self.api_key = api_key
+        if GeoApiMode(mode) == GeoApiMode.IN_PLACE_COUNTER:
+            self._get_distance = self._get_distance_in_place
 
     async def _get_distance(self, start: str, end: str) -> int:
         if start == '' or end == '':
@@ -38,3 +46,6 @@ class GeoService:
 
     async def close(self) -> None:
         await self.session.close()
+
+    async def _get_distance_in_place(self, start, end):
+        return abs((hash(start) - hash(end))/10**15)
