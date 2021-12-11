@@ -31,7 +31,8 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'delivery-api=app.__main__:main'
+            'delivery-api=app.__main__:main',
+            'delivery-db=app.db.__main__:main'
         ]
     },
     include_package_data=True

@@ -1,46 +1,58 @@
 from uuid import uuid4
+from enum import Enum
 from sqlalchemy.dialects.postgresql import UUID, ENUM
 from sqlalchemy import Table, Column, Integer, String, MetaData
 from sqlalchemy.sql.schema import ForeignKey
 
-meta = MetaData()
-states = ENUM(
-    'RECEIVED',
-    'TAKEN',
-    'DELIVERED',
-    name='states_enum'
-)
+
+class OrderState(Enum):
+    RECEIVED = 1
+    TAKEN = 2
+    DELIVERED = 3
+
+convention = {
+    'all_column_names': lambda constraint, table: '_'.join([
+        column.name for column in constraint.columns.values()
+    ]),
+    'ix': 'ix__%(table_name)s__%(all_column_names)s',
+    'uq': 'uq__%(table_name)s__%(all_column_names)s',
+    'ck': 'ck__%(table_name)s__%(constraint_name)s',
+    'fk': 'fk__%(table_name)s__%(all_column_names)s__%(referred_table_name)s',
+    'pk': 'pk__%(table_name)s'
+}
+
+meta = MetaData(naming_convention=convention)
 
 restaurants = Table(
     'Restaurants', meta,
-    Column(name='id', type_=Integer, primary_key=True),
-    Column(name='external_id', type_=UUID(as_uuid=False), default=uuid4),
-    Column(name='coords', type_=String(60), nullable=False),
-    Column(name='name', type_=String(60), nullable=False)
+    Column('id', Integer, primary_key=True),
+    Column('external_id', UUID(as_uuid=False), default=uuid4),
+    Column('coords', String(60), nullable=False),
+    Column('name', String(60), nullable=False)
 )
 
 orders = Table(
     'Orders', meta,
-    Column(name='id', type_=Integer, primary_key=True),
-    Column(name='external_id', type_=UUID(as_uuid=False), default=uuid4),
-    Column(name='content', type_=String(60), nullable=False),
-    Column(name='comment', type_=String(60), nullable=False),
-    Column(name='state', type_=states, nullable=False),
-    Column(name='restaurant_id', type_=Integer, foreign_key=ForeignKey('Restaurants.id'), nullable=False)
+    Column('id', Integer, primary_key=True),
+    Column('external_id', UUID(as_uuid=False), default=uuid4),
+    Column('content', String(60), nullable=False),
+    Column('comment', String(60), nullable=False),
+    Column('state', ENUM(OrderState), nullable=False),
+    Column('restaurant_id', Integer, ForeignKey('Restaurants.id'), nullable=False)
 )
 
 dishes = Table(
     'Dishes', meta,
-    Column(name='id', type_=Integer, primary_key=True),
-    Column(name='external_id', type_=UUID(as_uuid=False), default=uuid4),
-    Column(name='price', type_=Integer, default=0, nullable=False),
-    Column(name='restaurant_id', type_=Integer, foreign_key=ForeignKey('Restaurants.id'))
+    Column('id', Integer, primary_key=True),
+    Column('external_id', UUID(as_uuid=False), default=uuid4),
+    Column('price', Integer, default=0, nullable=False),
+    Column('restaurant_id', Integer, ForeignKey('Restaurants.id'))
 )
 
 orders_to_dishes = Table(
     'OrdersToDishes', meta,
-    Column(name='id', type_=Integer, primary_key=True),
-    Column(name='amount', type_=Integer, default=1, nullable=False),
-    Column(name='dish_id', type_=Integer, foreign_key=ForeignKey('Dishes.id')),
-    Column(name='order_id', type_=Integer, foreign_key=ForeignKey('Orders.id'))
+    Column('id', Integer, primary_key=True),
+    Column('amount', Integer, default=1, nullable=False),
+    Column('dish_id', Integer, ForeignKey('Dishes.id')),
+    Column('order_id', Integer, ForeignKey('Orders.id'))
 )
