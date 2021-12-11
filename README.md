@@ -86,7 +86,7 @@ delivery-db revision --message="message" --autogenerate
 ```
 To upgrade db to cur revision you need to use next command
 ```bash
-delivery-db upgrade head
+delivery-db upgrade HEAD
 ```
 
 ## Logging

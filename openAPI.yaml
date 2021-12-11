@@ -8,40 +8,12 @@ components:
     Order:
       type: object
       properties:
-        uuid:
-          type: string
-          format: uuid
         dishes:
           type: array
           items:
             type: string
             format: uuid
         comment:
-          type: string
-
-    CreateOrder:
-      type: object
-      properties:
-        dishes:
-          type: array
-          items:
-            type: string
-            format: uuid
-        comment:
-          type: string
-        restaurant:
-          type: string
-          format: uuid
-
-    Restaurant:
-      type: object
-      properties:
-        uuid:
-          type: string
-          format: uuid
-        coords:
-          type: string
-        name:
           type: string
 
     OrderCreated:
@@ -68,26 +40,6 @@ components:
           type: string
         price:
           type: number
-        restaurant:
-          type: string
-          format: uuid
-
-    CreateDish:
-      type: object
-      properties:
-        name:
-          type: string
-        price:
-          type: number
-        restaurant:
-          type: string
-          format: uuid
-    Price:
-      type: object
-      properties:
-        price:
-          type: integer
-
 
 paths:
   /ping:
@@ -125,12 +77,6 @@ paths:
       tags:
         - Orders
       summary: add order
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateOrder'
       responses:
         '200':
           description: Ok
@@ -226,12 +172,12 @@ paths:
             schema:
               $ref: '#/components/schemas/Delivery_price_req'
       responses:
-        '201':
+        '200':
           description: Ok
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Price'
+                $ref: '#/components/schemas/Order' # Price
         '429':
           description: Too many requests
         '406':
@@ -253,52 +199,6 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Dish'
-        '400':
-          description: Bad parameters
-        '429':
-          description: Too many requests
-        '500':
-          description: Internal server error
-    post:
-      tags:
-        - Dishes
-      summary: create dish
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateDish'
-      responses:
-        '201':
-          description: Ok
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Dish'
-        '400':
-          description: Bad parameters
-        '429':
-          description: Too many requests
-        '500':
-          description: Internal server error
-
-  /api/v1/restaurants:
-    get:
-      tags:
-        - Restaurants
-      summary: get restaurants list
-      responses:
-        '200':
-          description: Ok
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Restaurant'
         '400':
           description: Bad parameters
         '429':
