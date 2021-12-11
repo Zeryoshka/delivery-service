@@ -6,6 +6,7 @@ from app.api.handlers import handlers
 from app.api.middlewares import middlewares
 from app.db import DB
 from app.rps_limiter import RPS_limiter
+from app.geo_service import GeoService
 from app.config import Config
 
 logger = logging.getLogger(__name__)
@@ -14,6 +15,7 @@ def create_startup_function(config: Config) -> Callable:
     async def on_start(app: web.Application) -> None:
         app['db'] = DB(config)
         app['rps_limiter'] = RPS_limiter(config.MAX_RPS)
+        app['geo_service'] = GeoService(config.API_KEY, config.MIN_COST, config.MONEY_FOR_METER)
         app['config'] = config
         logger.info('App started')
 

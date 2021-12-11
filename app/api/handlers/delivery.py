@@ -11,4 +11,6 @@ class DeliveryPriceView(BaseView):
 
     async def post(self) -> web.Response:
         logger.info('Calc delivery price')
-        return web.json_response(status=HTTPStatus.OK)
+        req = await self.request.json()
+        cost = await self.geo_service.get_cost(req['start'], req['end'])
+        return web.json_response(data={'price': cost}, status=HTTPStatus.OK)
