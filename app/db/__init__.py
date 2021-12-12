@@ -1,15 +1,14 @@
-import logging
 from typing import Union
-from uuid import UUID
 from sqlalchemy import select, text
 from sqlalchemy.sql.expression import insert, update
-from app.db.dataclasses import dish
 from app.db.dataclasses.dish import Dish
 from app.db.dataclasses.restaurant import Restaurnat
-from app.db.exceptions import DatabaseClientError, DishDatabaseError, RestaurantDatabaseError 
+from app.db.exceptions import DatabaseClientError, DishDatabaseError
+from app.db.exceptions import RestaurantDatabaseError, OrderDatabaseError
 from sqlalchemy.ext.asyncio import create_async_engine
 from aiohttp import web
-from .schema import meta, dishes, restaurants, orders, orders_to_dishes
+from app.db.schema import meta, dishes, restaurants
+from app.db.schema import orders, orders_to_dishes, OrderState
 
 from app.config import Config
 
@@ -207,7 +206,10 @@ class DB:
         try:
             result = await self._read_restaurants()
             return [
-                Restaurnat(str(row[1]), row[2], row[3]) for row in result.fetchall()
+                Restaurnat(
+                    str(row[1]),
+                    row[2],
+                    row[3]) for row in result.fetchall()
             ]
         except RestaurantDatabaseError as err:
             raise DatabaseClientError(err)
@@ -229,6 +231,41 @@ class DB:
         except Exception as err:
             raise DishDatabaseError(
                 args=query_args,
+                message=err.args
+            )
+
+    async def _create_order(self,
+        content: list[str],
+        comment: str,
+        restaurant: str
+    ):
+        """
+        Internal method for creating order
+        """
+        query_args = {
+            'comment': comment,
+            'content': ', '.join(content),
+            'state': OrderState.RECEIVED
+        }
+        try:
+            async with self.engine.begin() as conn:
+                restaurant_id = await conn.execute(
+                    select(restaurants).where(
+                        restaurants.c.external_id == restaurant
+                    )
+                ).fetchone()[0]
+                if not restaurant_id:
+                    raise OrderDatabaseError(
+                        args=restaurant_id,
+                        message='No such restaurant'
+                    )
+                query_args['restaurant_id'] = restaurant_id
+                await conn.execute(
+                    insert(orders),
+                    query_args
+                )
+        except Exception as err:
+            raise OrderDatabaseError(
                 message=err.args
             )
 
