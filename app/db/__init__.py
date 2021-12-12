@@ -128,7 +128,7 @@ class DB:
         try:
             async with self.engine.begin() as conn:
                 await conn.execute(
-                    insert(restaurants),
+                    insert(restaurants).returning(dishes.c.external_id),
                     query_args
                 )
         except Exception as err:
