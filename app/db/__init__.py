@@ -44,7 +44,7 @@ class DB:
         try:
             async with self.engine.begin() as conn:
                 result = await conn.execute(
-                    insert(dishes),
+                    insert(dishes).returning(dishes.c.external_id),
                     query_args
                 )
             return result
@@ -64,6 +64,7 @@ class DB:
                 dish.price,
                 dish.restaurant_uuid
             )
+            return dish_uuid.fetchall()
         except DishDatabaseError as err:
             raise DatabaseClientError(err)
 
