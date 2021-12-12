@@ -38,12 +38,12 @@ orders = Table(
     Column('content', String(60), nullable=False),
     Column('comment', String(60), nullable=False),
     Column('state', ENUM(OrderState), nullable=False),
-    Column('restaurant_id', Integer, ForeignKey('Restaurants.id'), nullable=False)
 )
 
 dishes = Table(
     'Dishes', meta,
     Column('id', Integer, primary_key=True),
+    Column('name', String(60), nullable=False),
     Column('external_id', UUID(as_uuid=False), default=uuid4, unique=True),
     Column('price', Integer, default=0, nullable=False),
     Column('restaurant_id', Integer, ForeignKey('Restaurants.id'))
