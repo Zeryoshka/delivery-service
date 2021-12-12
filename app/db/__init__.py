@@ -1,12 +1,14 @@
+from typing import Union
 from sqlalchemy import select, text
 from sqlalchemy.sql.expression import insert, update
-from app.db.dataclasses import dish
 from app.db.dataclasses.dish import Dish
 from app.db.dataclasses.restaurant import Restaurnat
 from app.db.exceptions import DatabaseClientError, DishDatabaseError
+from app.db.exceptions import RestaurantDatabaseError, OrderDatabaseError
 from sqlalchemy.ext.asyncio import create_async_engine
 from aiohttp import web
-from .schema import meta, dishes, restaurants
+from app.db.schema import meta, dishes, restaurants
+from app.db.schema import orders, orders_to_dishes, OrderState
 
 from app.config import Config
 
@@ -32,17 +34,24 @@ class DB:
             await conn.run_sync(meta.drop_all)
             await conn.run_sync(meta.create_all)
 
-    async def _create_dish(self, name: str, price: int, resturant_uuid: str) -> str:
+    async def _create_dish(
+        self, name: str,
+        price: int, resturant_uuid: str
+    ) -> str:
         """
         Internal method for creating dish
         """
         query_args = {
             'price': price,
             'name': name,
-            'restaurant_id': None
         }
         try:
             async with self.engine.begin() as conn:
+                restaurant_id = await conn.execute(
+                    select(restaurants)
+                    .where(restaurants.c.external_id == resturant_uuid)
+                )
+                query_args['restaurant_id'] = restaurant_id.fetchone()[0]
                 result = await conn.execute(
                     insert(dishes).returning(dishes.c.external_id),
                     query_args
@@ -75,26 +84,40 @@ class DB:
         """
         try:
             async with self.engine.begin() as conn:
+                prepeared = dishes.join(restaurants,
+                    dishes.c.restaurant_id == restaurants.c.id
+                )
                 result = await conn.execute(
-                    select(dishes)
+                    select(
+                        dishes.c.name,
+                        dishes.c.price,
+                        dishes.c.external_id,
+                        restaurants.c.external_id
+                    ).select_from(prepeared)
                 )
             return result
         except Exception as err:
             raise DishDatabaseError(err)
 
-    async def read_dishes(self) -> list[Restaurnat]:
+    async def read_dishes(self) -> list[Dish]:
         """
         External method for selecting dish from database
         """
         try:
             result = await self._read_dishes()
-            print(result)
-            return result
+            return [
+                Dish(
+                    row[0],
+                    row[1],
+                    str(row[3]),
+                    str(row[2])
+                ) for row in result.fetchall()
+            ]
         except DishDatabaseError as err:
             raise DatabaseClientError(err)
 
 
-    async def _update_dish(self, price=None, restaurant_id=None) -> None | str:
+    async def _update_dish(self, dish_id: str, price=None, restaurant_id=None) -> Union[str, None]:
         """
         Internal method for updating a dish
         """
@@ -107,8 +130,18 @@ class DB:
             query_args['restaurant_id'] = restaurant_id
         try:
             async with self.engine.begin() as conn:
+                prepeared = dishes.join(restaurants,
+                    dishes.c.restaurant_id == restaurants.c.id
+                )
                 await conn.execute(
-                    update(dishes),
+                    update(prepeared)
+                    .where(dishes.c.external_id == dish_id)
+                    .returning(
+                        dishes.c.name,
+                        dishes.c.price,
+                        restaurants.c.external_id,
+                        dishes.c.external_id
+                    ),
                     query_args
                 )
         except Exception as err:
@@ -116,6 +149,22 @@ class DB:
                 args=[price, restaurant_id],
                 message=err.args
             )
+
+    async def update_dish(self, dish_id: str, price, restaurant_id) -> Dish:
+        """
+        External method for updating a dish
+        """
+        if price is None and restaurant_id is None:
+            return None
+        try:
+            query = self._update_dish(
+                dish_id,
+                price,
+                restaurant_id,
+            ).fetchone()
+            return Dish(query[0], query[1], query[2], query[3])
+        except DishDatabaseError as err:
+            raise DatabaseClientError(err)
 
     async def _create_restaurant(self, name, coords):
         """
@@ -128,7 +177,7 @@ class DB:
         try:
             async with self.engine.begin() as conn:
                 await conn.execute(
-                    insert(restaurants).returning(dishes.c.external_id),
+                    insert(restaurants).returning(restaurants.c.external_id),
                     query_args
                 )
         except Exception as err:
@@ -148,7 +197,7 @@ class DB:
                 )
             return result
         except Exception as err:
-            raise DishDatabaseError(err)
+            raise RestaurantDatabaseError(err)
 
     async def read_restaurants(self) -> list[Restaurnat]:
         """
@@ -157,9 +206,12 @@ class DB:
         try:
             result = await self._read_restaurants()
             return [
-                Restaurnat(row[1], row[2], row[3]) for row in result.fetchall()
+                Restaurnat(
+                    str(row[1]),
+                    row[2],
+                    row[3]) for row in result.fetchall()
             ]
-        except DishDatabaseError as err:
+        except RestaurantDatabaseError as err:
             raise DatabaseClientError(err)
 
     async def _update_restaurant(self, name, coords):
@@ -181,6 +233,66 @@ class DB:
                 args=query_args,
                 message=err.args
             )
+
+    async def _create_order(self,
+        content: list[str],
+        comment: str,
+        restaurant: str
+    ):
+        """
+        Internal method for creating order
+        """
+        query_args = {
+            'comment': comment,
+            'content': ', '.join(content),
+            'state': OrderState.RECEIVED
+        }
+        try:
+            async with self.engine.begin() as conn:
+                restaurant_id = await conn.execute(
+                    select(restaurants).where(
+                        restaurants.c.external_id == restaurant
+                    )
+                ).fetchone()[0]
+                if not restaurant_id:
+                    raise OrderDatabaseError(
+                        args=restaurant_id,
+                        message='No such restaurant'
+                    )
+                query_args['restaurant_id'] = restaurant_id
+                await conn.execute(
+                    insert(orders),
+                    query_args
+                )
+        except Exception as err:
+            raise OrderDatabaseError(
+                message=err.args
+            )
+
+    async def _read_orders(self):
+        """
+        Internal method for getting all the orders
+        """
+        try:
+            async with self.engine.begin() as conn:
+                await conn.execute(
+                    select(orders),
+                )
+        except Exception as err:
+            raise DishDatabaseError(
+                message=err.args
+            )
+
+    async def read_orders(self):
+        """
+        External method for getting all the orders
+        """
+        try:
+            result = await self._read_orders()
+            print(result)
+            return result
+        except DishDatabaseError as err:
+            raise DatabaseClientError(err)
 
     async def ping(self) -> None:
         """
