@@ -1,10 +1,13 @@
 import logging
+import json
 from http import HTTPStatus
 from aiohttp import web
 from pydantic import ValidationError
+from pydantic.json import pydantic_encoder
 
 from app.api.handlers.base_view import BaseView
 from app.api.schemas.request_schemas import DeliveryPriceRequestSchema
+from app.api.schemas.response_schemas import DeliveryPriceResponseSchema
 from app.geo_service.exceptions import GeoApiError, RouteNotFound
 
 logger = logging.getLogger(__name__)
@@ -31,4 +34,9 @@ class DeliveryPriceView(BaseView):
             logger.info('GeoApi error')
             raise web.HTTPInternalServerError()
 
-        return web.json_response(data={'price': cost}, status=HTTPStatus.OK)
+        response_data = DeliveryPriceResponseSchema(price = cost)
+        return web.Response(
+            text=json.dumps(response_data, default=pydantic_encoder),
+            headers={'Content-Type': 'application/json'},
+            status=HTTPStatus.OK
+        )
