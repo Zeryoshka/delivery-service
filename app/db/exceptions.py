@@ -5,9 +5,20 @@ class DatabaseClientError(Exception):
     def __init__(self, *args: object) -> None:
         super().__init__(*args)
 
+
 class DishDatabaseError(DatabaseClientError):
     """
     Base class for all dish methods errors
+    """
+    def __init__(self, args=None, message='Default message') -> None:
+        self.args = args
+        self.message = message
+        super().__init__(self.message)
+
+
+class RestaurantDatabaseError(DatabaseClientError):
+    """
+    Base class for all restaurant methods errors
     """
     def __init__(self, args=None, message='Default message') -> None:
         self.args = args
