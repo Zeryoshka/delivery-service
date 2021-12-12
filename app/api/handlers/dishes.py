@@ -33,7 +33,7 @@ class OrderView(BaseView):
                     name=incoming_body['name']
                 )
             )
-            return web.json_response(incoming_body)
+            return web.json_response({ 'dish_id': str(uuid[0]) for uuid in db_answer }, status=HTTPStatus.CREATED)
         except json.JSONDecodeError as err:
             logger.error(err)
             return web.json_response(status=HTTPStatus.BAD_REQUEST)
