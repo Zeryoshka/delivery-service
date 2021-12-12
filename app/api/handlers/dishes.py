@@ -40,3 +40,22 @@ class OrderView(BaseView):
         except DatabaseClientError as err:
             logger.error(err)
             return web.json_response(status=HTTPStatus.INTERNAL_SERVER_ERROR)
+
+class DishesView(BaseView):
+    URL = r'/api/v1/dishes'
+
+    async def get(self) -> web.Response:
+        logger.info('get dished')
+        return web.json_response(status=HTTPStatus.OK)
+
+    async def post(self) -> web.Response:
+        logger.info('create dish')
+        return web.json_response(status=HTTPStatus.OK)
+
+
+class OneDishView(BaseView):
+    URL = r'/api/v1/dishes/{dish_id}'
+
+    async def get(self) -> web.Response:
+        logger.info('get dish')
+        return web.json_response(status=HTTPStatus.OK)

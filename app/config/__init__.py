@@ -11,7 +11,11 @@ NAMES_OF_VARS = [
     'DB_NAME',
     'LOG_FILE',
     'LOG_LEVEL',
-    'MAX_RPS'
+    'MAX_RPS',
+    'API_KEY',
+    'MIN_COST',
+    'MONEY_FOR_METER',
+    'GEO_API_MODE'
 ]
 
 
