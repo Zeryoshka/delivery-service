@@ -1,4 +1,5 @@
 import logging
+from typing import Union
 from uuid import UUID
 from sqlalchemy import select, text
 from sqlalchemy.sql.expression import insert, update
@@ -117,7 +118,7 @@ class DB:
             raise DatabaseClientError(err)
 
 
-    async def _update_dish(self, price=None, restaurant_id=None) -> None | str:
+    async def _update_dish(self, dish_id: str, price=None, restaurant_id=None) -> Union[str, None]:
         """
         Internal method for updating a dish
         """
@@ -130,8 +131,18 @@ class DB:
             query_args['restaurant_id'] = restaurant_id
         try:
             async with self.engine.begin() as conn:
+                prepeared = dishes.join(restaurants,
+                    dishes.c.restaurant_id == restaurants.c.id
+                )
                 await conn.execute(
-                    update(dishes),
+                    update(prepeared)
+                    .where(dishes.c.external_id == dish_id)
+                    .returning(
+                        dishes.c.name,
+                        dishes.c.price,
+                        restaurants.c.external_id,
+                        dishes.c.external_id
+                    ),
                     query_args
                 )
         except Exception as err:
@@ -139,6 +150,22 @@ class DB:
                 args=[price, restaurant_id],
                 message=err.args
             )
+
+    async def update_dish(self, dish_id: str, price, restaurant_id) -> Dish:
+        """
+        External method for updating a dish
+        """
+        if price is None and restaurant_id is None:
+            return None
+        try:
+            query = self._update_dish(
+                dish_id,
+                price,
+                restaurant_id,
+            ).fetchone()
+            return Dish(query[0], query[1], query[2], query[3])
+        except DishDatabaseError as err:
+            raise DatabaseClientError(err)
 
     async def _create_restaurant(self, name, coords):
         """
