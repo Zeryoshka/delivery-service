@@ -1,3 +1,4 @@
+from dataclasses import asdict
 import json
 import logging
 from http import HTTPStatus
@@ -18,7 +19,7 @@ class OrderView(BaseView):
             logger.info('invoking db method')
             db_answer = await self.db.read_dishes()
             logger.debug(f'db answer :{db_answer}')
-            return web.json_response(status=HTTPStatus.OK)
+            return web.json_response(list(map(asdict, db_answer)))
         except DatabaseClientError as err:
             return web.json_response(status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
@@ -30,7 +31,8 @@ class OrderView(BaseView):
             db_answer = await self.db.create_dish(
                 Dish(
                     price=incoming_body['price'],
-                    name=incoming_body['name']
+                    name=incoming_body['name'],
+                    restaurant_uuid=incoming_body['restaurant']
                 )
             )
             return web.json_response({ 'dish_id': str(uuid[0]) for uuid in db_answer }, status=HTTPStatus.CREATED)
