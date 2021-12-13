@@ -7,6 +7,6 @@ handlers = [
     PingView,
     PingDBView,
     OrderView,
-    RestaurantView
+    RestaurantView,
     DeliveryPriceView,
 ]

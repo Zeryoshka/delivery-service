@@ -26,7 +26,7 @@ meta = MetaData(naming_convention=convention)
 restaurants = Table(
     'Restaurants', meta,
     Column('id', Integer, primary_key=True),
-    Column('external_id', UUID(as_uuid=False), default=uuid4, unique=True),
+    Column('external_id', UUID(as_uuid=True), default=uuid4, unique=True),
     Column('coords', String(60), nullable=False),
     Column('name', String(60), nullable=False)
 )
@@ -34,7 +34,7 @@ restaurants = Table(
 orders = Table(
     'Orders', meta,
     Column('id', Integer, primary_key=True),
-    Column('external_id', UUID(as_uuid=False), default=uuid4, unique=True),
+    Column('external_id', UUID(as_uuid=True), default=uuid4, unique=True),
     Column('content', String(60), nullable=False),
     Column('comment', String(60), nullable=False),
     Column('state', ENUM(OrderState), nullable=False),
@@ -44,7 +44,7 @@ dishes = Table(
     'Dishes', meta,
     Column('id', Integer, primary_key=True),
     Column('name', String(60), nullable=False),
-    Column('external_id', UUID(as_uuid=False), default=uuid4, unique=True),
+    Column('external_id', UUID(as_uuid=True), default=uuid4, unique=True),
     Column('price', Integer, default=0, nullable=False),
     Column('restaurant_id', Integer, ForeignKey('Restaurants.id'))
 )

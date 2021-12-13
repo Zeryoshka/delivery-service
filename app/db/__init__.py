@@ -1,3 +1,5 @@
+import asyncio
+import logging
 from typing import Union
 from sqlalchemy import select, text
 from sqlalchemy.sql.expression import insert, update
@@ -7,10 +9,13 @@ from app.db.exceptions import DatabaseClientError, DishDatabaseError
 from app.db.exceptions import RestaurantDatabaseError, OrderDatabaseError
 from sqlalchemy.ext.asyncio import create_async_engine
 from aiohttp import web
+
 from app.db.schema import meta, dishes, restaurants
 from app.db.schema import orders, orders_to_dishes, OrderState
-
 from app.config import Config
+
+
+logger = logging.getLogger(__name__)
 
 class DB:
     def __init__(self, config: Config) -> None:
@@ -23,6 +28,15 @@ class DB:
         self.engine = create_async_engine(
             f'postgresql+asyncpg://{user}:{password}@{host}:{port}/{name}'
         )
+        logger.info('DB client created')
+
+        # TODO del it and create real method for it
+        async def _create_test_restaurant():
+            await asyncio.sleep(2)
+            await self._create_restaurant(
+                'Широкая на широкой', '55.761504752446015, 37.636262227226375'
+            )
+        asyncio.create_task(_create_test_restaurant())
 
 
     async def _clear_initialize(self):
@@ -41,27 +55,33 @@ class DB:
         """
         Internal method for creating dish
         """
-        query_args = {
-            'price': price,
-            'name': name,
-        }
         try:
             async with self.engine.begin() as conn:
-                restaurant_id = await conn.execute(
+                restaurant_response = await conn.execute(
                     select(restaurants)
                     .where(restaurants.c.external_id == resturant_uuid)
                 )
-                query_args['restaurant_id'] = restaurant_id.fetchone()[0]
+                restaurant_id = restaurant_response.fetchone()
+                if restaurant_id is None:
+                    raise ValueError()
+
+                query_args = {
+                    'price': price,
+                    'name': name,
+                    'restaurant_id': restaurant_id[0]
+                }
                 result = await conn.execute(
                     insert(dishes).returning(dishes.c.external_id),
                     query_args
                 )
-            return result
         except Exception as err:
+            logger.warn('DB error in DB._create_dish')
             raise DishDatabaseError(
                 args=query_args,
                 message=err.args
             )
+        logger.debug('DB created new dish')
+        return result
 
     async def create_dish(self, dish: Dish) -> str:
         """
@@ -73,9 +93,11 @@ class DB:
                 dish.price,
                 dish.restaurant_uuid
             )
-            return dish_uuid.fetchall()
         except DishDatabaseError as err:
+            logging.warn(f"DB error in DB.create_dish {err}")
             raise DatabaseClientError(err)
+        logger.debug("DB created dish")
+        return dish_uuid.fetchall()
 
 
     async def _read_dishes(self):
@@ -97,6 +119,7 @@ class DB:
                 )
             return result
         except Exception as err:
+            logger.warn(f'DB error in DB.read_dishes {err}')
             raise DishDatabaseError(err)
 
     async def read_dishes(self) -> list[Dish]:
@@ -114,6 +137,7 @@ class DB:
                 ) for row in result.fetchall()
             ]
         except DishDatabaseError as err:
+            logger.warn(f'DB error in DB.read_dishes: {err}')
             raise DatabaseClientError(err)
 
 
@@ -178,7 +202,7 @@ class DB:
             async with self.engine.begin() as conn:
                 await conn.execute(
                     insert(restaurants).returning(restaurants.c.external_id),
-                    query_args
+                    [query_args]
                 )
         except Exception as err:
             raise DishDatabaseError(
@@ -289,7 +313,6 @@ class DB:
         """
         try:
             result = await self._read_orders()
-            print(result)
             return result
         except DishDatabaseError as err:
             raise DatabaseClientError(err)
