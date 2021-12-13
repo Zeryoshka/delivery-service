@@ -30,7 +30,6 @@ class OrderDatabaseError(DatabaseClientError):
     """
     Base class for all order methods errors
     """
-    def __init__(self, args=None, message='Default message') -> None:
-        self.args = args
+    def __init__(self, message='Default message') -> None:
         self.message = message
         super().__init__(self.message)

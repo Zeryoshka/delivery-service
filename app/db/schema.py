@@ -35,9 +35,9 @@ orders = Table(
     'Orders', meta,
     Column('id', Integer, primary_key=True),
     Column('external_id', UUID(as_uuid=True), default=uuid4, unique=True),
-    Column('content', String(60), nullable=False),
-    Column('comment', String(60), nullable=False),
-    Column('state', ENUM(OrderState), nullable=False),
+    Column('content', String(200), nullable=False),
+    Column('comment', String(150), nullable=False),
+    Column('state', ENUM(OrderState), nullable=False, default=OrderState.RECEIVED),
 )
 
 dishes = Table(

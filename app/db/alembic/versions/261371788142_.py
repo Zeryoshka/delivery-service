@@ -1,8 +1,8 @@
-"""initial
+"""empty message
 
-Revision ID: ac05757cb1ff
+Revision ID: 261371788142
 Revises: 
-Create Date: 2021-12-12 13:04:48.673806
+Create Date: 2021-12-13 13:14:06.277269
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = 'ac05757cb1ff'
+revision = '261371788142'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -21,17 +21,19 @@ def upgrade():
     op.create_table('Orders',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('external_id', postgresql.UUID(as_uuid=True), nullable=True),
-    sa.Column('content', sa.String(length=60), nullable=False),
-    sa.Column('comment', sa.String(length=60), nullable=False),
+    sa.Column('content', sa.String(length=200), nullable=False),
+    sa.Column('comment', sa.String(length=150), nullable=False),
     sa.Column('state', postgresql.ENUM('RECEIVED', 'TAKEN', 'DELIVERED', name='orderstate'), nullable=False),
-    sa.PrimaryKeyConstraint('id', name=op.f('pk__Orders'))
+    sa.PrimaryKeyConstraint('id', name=op.f('pk__Orders')),
+    sa.UniqueConstraint('external_id', name=op.f('uq__Orders__external_id'))
     )
     op.create_table('Restaurants',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('external_id', postgresql.UUID(as_uuid=True), nullable=True),
     sa.Column('coords', sa.String(length=60), nullable=False),
     sa.Column('name', sa.String(length=60), nullable=False),
-    sa.PrimaryKeyConstraint('id', name=op.f('pk__Restaurants'))
+    sa.PrimaryKeyConstraint('id', name=op.f('pk__Restaurants')),
+    sa.UniqueConstraint('external_id', name=op.f('uq__Restaurants__external_id'))
     )
     op.create_table('Dishes',
     sa.Column('id', sa.Integer(), nullable=False),
@@ -40,7 +42,8 @@ def upgrade():
     sa.Column('price', sa.Integer(), nullable=False),
     sa.Column('restaurant_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['restaurant_id'], ['Restaurants.id'], name=op.f('fk__Dishes__restaurant_id__Restaurants')),
-    sa.PrimaryKeyConstraint('id', name=op.f('pk__Dishes'))
+    sa.PrimaryKeyConstraint('id', name=op.f('pk__Dishes')),
+    sa.UniqueConstraint('external_id', name=op.f('uq__Dishes__external_id'))
     )
     op.create_table('OrdersToDishes',
     sa.Column('id', sa.Integer(), nullable=False),

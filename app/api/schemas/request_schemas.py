@@ -1,3 +1,4 @@
+from typing import List
 from pydantic import BaseModel
 
 
@@ -12,4 +13,9 @@ class DeliveryPriceRequestSchema(RequestBaseModel):
 class CreateDishRequestSchema(RequestBaseModel):
     price: int
     name: str
+    restaurant: str
+
+class CreateOrderRequestSchema(RequestBaseModel):
+    dishes: List[str]
+    comment: str
     restaurant: str

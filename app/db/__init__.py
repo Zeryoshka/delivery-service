@@ -270,29 +270,43 @@ class DB:
         query_args = {
             'comment': comment,
             'content': ', '.join(content),
-            'state': OrderState.RECEIVED
         }
         try:
             async with self.engine.begin() as conn:
-                restaurant_id = await conn.execute(
-                    select(restaurants).where(
+                restaurant_query = await conn.execute(
+                    select(restaurants.c.id).where(
                         restaurants.c.external_id == restaurant
                     )
-                ).fetchone()[0]
+                )
+                restaurant_id = restaurant_query.fetchone()[0]
                 if not restaurant_id:
                     raise OrderDatabaseError(
                         args=restaurant_id,
                         message='No such restaurant'
                     )
-                query_args['restaurant_id'] = restaurant_id
-                await conn.execute(
-                    insert(orders),
+                # query_args['restaurant_id'] = restaurant_id
+                print(query_args)
+                res = await conn.execute(
+                    insert(orders).returning(orders.c.external_id),
                     query_args
                 )
+                print('HERE')
+                return res
+        except Exception as err:
+            raise OrderDatabaseError(err)
+
+    async def create_order(self, order: Order) -> str:
+        try:
+            order_uuid = await self._create_order(
+                order.content,
+                order.comment,
+                order.restaurant
+            )
         except Exception as err:
             raise OrderDatabaseError(
                 message=err.args
             )
+        return order_uuid.fetchall()
 
     async def _read_orders(self):
         """
@@ -320,7 +334,10 @@ class DB:
         try:
             result = await self._read_orders()
             return [
-                Order(row[0], row[1], row[2]) for row in result.fetchall()
+                Order(uuid=str(row[0]),
+                    content=row[1].split(', '),
+                    comment=row[2]
+                ) for row in result.fetchall()
             ]
         except DishDatabaseError as err:
             raise DatabaseClientError(err)
