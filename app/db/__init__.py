@@ -4,6 +4,7 @@ from typing import Union
 from sqlalchemy import select, text
 from sqlalchemy.sql.expression import insert, update
 from app.db.dataclasses.dish import Dish
+from app.db.dataclasses.order import Order
 from app.db.dataclasses.restaurant import Restaurnat
 from app.db.exceptions import DatabaseClientError, DishDatabaseError
 from app.db.exceptions import RestaurantDatabaseError, OrderDatabaseError
@@ -299,21 +300,28 @@ class DB:
         """
         try:
             async with self.engine.begin() as conn:
-                await conn.execute(
-                    select(orders),
+                result = await conn.execute(
+                    select(
+                        orders.c.external_id,
+                        orders.c.content,
+                        orders.c.comment,
+                    ),
                 )
+                return result
         except Exception as err:
             raise DishDatabaseError(
                 message=err.args
             )
 
-    async def read_orders(self):
+    async def read_orders(self) -> list[Order]:
         """
         External method for getting all the orders
         """
         try:
             result = await self._read_orders()
-            return result
+            return [
+                Order(row[0], row[1], row[2]) for row in result.fetchall()
+            ]
         except DishDatabaseError as err:
             raise DatabaseClientError(err)
 

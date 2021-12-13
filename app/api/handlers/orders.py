@@ -1,3 +1,4 @@
+from dataclasses import asdict
 import logging
 from http import HTTPStatus
 from aiohttp import web
@@ -11,7 +12,11 @@ class OrdersView(BaseView):
 
     async def get(self) -> web.Response:
         logger.info('get orders')
-        return web.json_response(status=HTTPStatus.OK)
+        db_response = await self.db.read_orders()
+        logger.debug(f'db answer :{db_response}')
+        return web.json_response(
+                list(map(asdict, db_response))
+            )
 
     async def post(self) -> web.Response:
         logger.info('create order')
