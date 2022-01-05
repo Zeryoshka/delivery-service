@@ -1,0 +1,332 @@
+openapi: '3.0.2'
+info:
+  title: 'Delivery-service'
+  description: 'Delivery-service API description'
+  version: '0.1'
+components:
+  schemas:
+    Order:
+      type: object
+      properties:
+        uuid:
+          type: string
+          format: uuid
+        dishes:
+          type: array
+          items:
+            type: string
+            format: uuid
+        comment:
+          type: string
+
+    CreateOrder:
+      type: object
+      properties:
+        dishes:
+          type: array
+          items:
+            type: string
+            format: uuid
+        comment:
+          type: string
+        restaurant:
+          type: string
+          format: uuid
+
+    Restaurant:
+      type: object
+      properties:
+        uuid:
+          type: string
+          format: uuid
+        coords:
+          type: string
+        name:
+          type: string
+
+    OrderCreated:
+      type: object
+      properties:
+        order_id:
+          type: string
+
+    Delivery_price_req:
+      type: object
+      properties:
+        start:
+          type: string
+        end:
+          type: string
+
+    Dish:
+      type: object
+      properties:
+        uuid:
+          type: string
+          format: uuid
+        name:
+          type: string
+        price:
+          type: number
+        restaurant:
+          type: string
+          format: uuid
+
+    CreateDish:
+      type: object
+      properties:
+        name:
+          type: string
+        price:
+          type: number
+        restaurant:
+          type: string
+          format: uuid
+    Price:
+      type: object
+      properties:
+        price:
+          type: integer
+
+
+paths:
+  /ping:
+    get:
+      tags:
+        - Tech
+      summary: Ping service
+      responses:
+        '429':
+          description: Too many requests
+        '200':
+          description: Ok. Service is available
+
+  /api/v1/orders:
+    get:
+      tags:
+        - Orders
+      summary: get orders list
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Order'
+        '400':
+          description: Bad parameters
+        '429':
+          description: Too many requests
+        '500':
+          description: Internal server error
+    post:
+      tags:
+        - Orders
+      summary: add order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrder'
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderCreated'
+        '400':
+          description: Bad parameters
+        '429':
+          description: Too many requests
+        '500':
+          description: Internal server error
+
+  /api/v1/orders/{order_id}:
+    get:
+      tags:
+        - Orders
+      summary: get detailed order info
+      parameters:
+        - name: order_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '404':
+          description: Not found
+        '429':
+          description: Too many requests
+        '500':
+          description: Internal server error
+    delete:
+      tags:
+        - Orders
+      summary: delete order
+      parameters:
+        - name: order_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Ok
+        '404':
+          description: Not found
+        '429':
+          description: Too many requests
+        '500':
+          description: Internal server error
+
+
+  /api/v1/orders/{order_id}/status:
+    patch:
+      tags:
+        - Orders
+      summary: Update status
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Order' # Enum status
+      parameters:
+        - name: order_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Ok
+        '404':
+          description: Not found
+        '429':
+          description: Too many requests
+        '500':
+          description: Internal server error
+
+  /api/v1/delivery/price:
+    post:
+      tags:
+        - Delivery
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Delivery_price_req'
+      responses:
+        '201':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Price'
+        '429':
+          description: Too many requests
+        '406':
+          description: Not acceptable content
+        '500':
+          description: Internal server error
+
+  /api/v1/dishes:
+    get:
+      tags:
+        - Dishes
+      summary: get dishes list
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Dish'
+        '400':
+          description: Bad parameters
+        '429':
+          description: Too many requests
+        '500':
+          description: Internal server error
+    post:
+      tags:
+        - Dishes
+      summary: create dish
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDish'
+      responses:
+        '201':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Dish'
+        '400':
+          description: Bad parameters
+        '429':
+          description: Too many requests
+        '500':
+          description: Internal server error
+
+  /api/v1/restaurants:
+    get:
+      tags:
+        - Restaurants
+      summary: get restaurants list
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Restaurant'
+        '400':
+          description: Bad parameters
+        '429':
+          description: Too many requests
+        '500':
+          description: Internal server error
+
+  /api/v1/dishes/{dish_id}:
+    get:
+      tags:
+        - Dishes
+      summary: get detailed dish info
+      parameters:
+        - name: dish_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dish'
+        '404':
+          description: Not found
+        '429':
+          description: Too many requests
+        '500':
+          description: Internal server error
